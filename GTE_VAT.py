@@ -11,7 +11,7 @@ Tool to mass input the VAT on GTE Tax Recon website
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.Keys import Keys
+from selenium.webdriver.common.keys import Keys
 from requests import get
 import pandas as pd
 import os
@@ -31,27 +31,30 @@ if not csvfile == '':
     
     col_list = df.values.tolist()
     row = 0
+    fail=[]
     for item in col_list:
-        print(col_list[row])
+        try: 
+            print(col_list[row][0])
+            print(col_list[row][1])
+            print(col_list[row][2])
+            row = row + 1
+        except:
+            fail.append(col_list[row])
         
-        row = row + 1
 
-
-
-
-
+def autofill(fphm, net, vat):
     driver = webdriver.Edge(
         './msedgedriver.exe')
 
     driver.set_window_size(1024, 800)
     driver.get(url='https://www.xd.com/users/register/?')
     driver.implicitly_wait(10)
-    driver.find_element(By.NAME, 'username').send_keys('tankren')
+    driver.find_element(By.NAME, 'username').send_keys(fphm)
     driver.find_element(By.NAME,  'password').send_keys('12345AAAAA!')
     driver.find_element(By.NAME, 'confirm').send_keys('12345AAAAA!')
-    driver.find_element(By.NAME, 'realname').send_keys('张三')
+    driver.find_element(By.NAME, 'realname').send_keys(net)
     driver.find_element(By.NAME, 'realid').send_keys('110101199001013195')
-    driver.find_element(By.NAME, 'email').send_keys('123@123.com')
+    driver.find_element(By.NAME, 'email').send_keys('{vat}@123.com')
     driver.find_element(By.NAME, 'mobile').send_keys('13800138000')
     driver.find_element(By.NAME, 'agreement').click()
     driver.find_element(By.CLASS_NAME, 'geetest_radar_tip').click()

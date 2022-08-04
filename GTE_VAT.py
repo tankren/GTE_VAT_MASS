@@ -5,7 +5,8 @@ Created on Thu Aug  4 12:42:37 2022
 @author: REC3WX
 
 Tool to mass input the VAT on GTE Tax Recon website
-
+CMD:
+chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\selenum\ChromeProfile"
 """
 
 
@@ -23,10 +24,12 @@ import time
 from tkinter import Tk  # from tkinter import Tk for Python 3.x
 from tkinter.filedialog import askopenfilename
 
-#os.popen("chcp 936")
+os.popen("chcp 936")
 
 opt = Options()
-opt.add_experimental_option("debuggerAddress", "localhost:9222")
+#opt.add_experimental_option("debuggerAddress", "localhost:9222")
+opt.add_argument("--remote-debugging-port=9222")
+opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=opt)
 print(driver)
 
@@ -51,8 +54,6 @@ Tk().withdraw()  # we don't want a full GUI, so keep the root window from appear
 csvfile = askopenfilename(
     filetypes=[('CSV文件', '.csv')], title='选择发票信息CSV文件'
 )
-
-print(csvfile)
 
 if not csvfile == '':
     df = pd.read_csv(csvfile, dtype=str, header=0)

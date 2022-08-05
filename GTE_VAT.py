@@ -102,8 +102,4 @@ if not csvfile == '':
             row = row + 1
         except:
             fail.append(col_list[row])
-<<<<<<< HEAD
 """
-=======
-"""
->>>>>>> b258b2fe63b7d83af2067dce0956d130ba7c5da0

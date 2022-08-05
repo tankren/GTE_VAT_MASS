@@ -8,9 +8,12 @@ Tool to mass input the VAT on GTE Tax Recon website
 CMD:
 "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\EdgeProfile"
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+<<<<<<< HEAD
 ChromeDriverManager-chrome.py
             url: str = "http://npm.taobao.org/mirrors/chromedriver",
             latest_release_url: str = "http://npm.taobao.org/mirrors/chromedriver/LATEST_RELEASE",
+=======
+>>>>>>> b258b2fe63b7d83af2067dce0956d130ba7c5da0
 """
 
 
@@ -19,7 +22,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
+<<<<<<< HEAD
 from webdriver_manager.chrome  import ChromeDriverManager
+=======
+##from webdriver_manager.chrome  import ChromeDriverManager
+>>>>>>> b258b2fe63b7d83af2067dce0956d130ba7c5da0
 import pandas as pd
 import os
 from tkinter import Tk 
@@ -36,10 +43,17 @@ opt.add_experimental_option("debuggerAddress", "localhost:9222")
 """
 opt.add_argument("--remote-debugging-port=9222")
 opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+<<<<<<< HEAD
 driver_path = ChromeService(r'./chromedriver.exe')
 driver = webdriver.Chrome(service=driver_path, options=opt)
 """
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=opt)
+=======
+"""
+driver_path = ChromeService(r'./chromedriver.exe')
+driver = webdriver.Chrome(service=driver_path, options=opt)
+#driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=opt)
+>>>>>>> b258b2fe63b7d83af2067dce0956d130ba7c5da0
 driver.set_window_size('1920', '1080')
 print(driver)
 """
@@ -99,4 +113,8 @@ if not csvfile == '':
             row = row + 1
         except:
             fail.append(col_list[row])
+<<<<<<< HEAD
 """
+=======
+"""
+>>>>>>> b258b2fe63b7d83af2067dce0956d130ba7c5da0

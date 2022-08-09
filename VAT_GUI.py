@@ -26,10 +26,18 @@ import pandas as pd
 import sys
 import time
 from tkinter import simpledialog, messagebox
-from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox
+from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox, QThread
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Slot, Qt
 import qdarktheme
+import threading
+
+class MainBackgroundThread(QThread):
+    def __init__(self, year, month):
+        QThread.__init__(self)
+        self.keyword, self.sector = keyword, sector
+    def run(self):
+        main(self.keyword, self.sector)
 
 class MyWidget(QWidget):
     def __init__(self, parent=None):
@@ -45,7 +53,6 @@ class MyWidget(QWidget):
         self.btn_csv= QPushButton('打开')
         self.btn_csv.clicked.connect(self.opencsvDialog)
         self.line_csv = QLineEdit()
-        #self.line_csv.setFixedWidth(400)
         self.line_csv.setClearButtonEnabled(True) #清空按钮
         
         self.fld_year= QLabel('发票年份:')
@@ -100,6 +107,8 @@ class MyWidget(QWidget):
 
     def reset(self):
         self.line_csv.setText('')
+        self.cb_year.setCurrentText('')
+        self.cb_month.setCurrentText('')
         self.text_result.clear()
 
     def opencsvDialog(self):
@@ -222,8 +231,7 @@ class MyWidget(QWidget):
                     driver.quit()
 
 
-
-if __name__ == '__main__':
+def main():
     if not QApplication.instance():
         app = QApplication(sys.argv)
     else:
@@ -235,4 +243,7 @@ if __name__ == '__main__':
     app.setFont(font)
     widget = MyWidget()
     widget.show()
-    sys.exit(app.exec())     
+    sys.exit(app.exec())  
+
+if __name__ == '__main__':
+main()

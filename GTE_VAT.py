@@ -27,7 +27,7 @@ import os
 import time
 from tkinter import Tk 
 from tkinter.filedialog import askopenfilename
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 
 os.popen("chcp 936")
 
@@ -53,28 +53,16 @@ csvfile = askopenfilename(
 )
 print(csvfile)
 
-year = simpledialog.askstring(title="请输入", prompt="发票年份(YYYY):")
-month = simpledialog.askstring(title="请输入", prompt="发票月份(M):")
-                
-#year = input("请输入发票年份(YYYY):")
-#month = input("请输入发票月份(M):")
-#year = ('2022')
-#month = ('7')
-
-opt = Options()
-opt.add_experimental_option("debuggerAddress", "localhost:9222")
-
-##opt.add_argument("--remote-debugging-port=9222")
-##opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
-"""
-driver_path = ChromeService(r'./chromedriver.exe')
-driver = webdriver.Chrome(service=driver_path, options=opt)
-"""
-driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
-driver.set_window_size('1920', '1080')
-print(driver)
-
 if not csvfile == '':
+    year = simpledialog.askstring("请输入", "发票年份(YYYY):")
+    month = simpledialog.askstring("请输入", "发票月份(M):")
+                    
+    #year = input("请输入发票年份(YYYY):")
+    #month = input("请输入发票月份(M):")
+    #year = ('2022')
+    #month = ('7')
+
+
     df = pd.read_csv(csvfile, dtype=str, header=0)
     
     col_list = df.values.tolist()
@@ -82,7 +70,17 @@ if not csvfile == '':
     num1 = 1
     print(col_list[row])
     fail=[]
+    opt = Options()
+    #opt.add_experimental_option("debuggerAddress", "localhost:9222")
 
+    opt.add_argument("--remote-debugging-port=9222")
+    opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+    """
+    driver_path = ChromeService(r'./chromedriver.exe')
+    driver = webdriver.Chrome(service=driver_path, options=opt)
+    """
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
+    driver.fullscreen_window()
     driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
     time.sleep(2)
     driver.find_element(By.NAME, "x").click()
@@ -100,23 +98,15 @@ if not csvfile == '':
     ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/ul/li[1]/a').click()
 
     driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//input[@name="ck"]').click()
-    time.sleep(0.5)
     driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
-    time.sleep(3)
+    time.sleep(2)
     iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
     driver.switch_to.frame("layui-layer-iframe1")
     
@@ -128,10 +118,12 @@ if not csvfile == '':
             num1 = num1 + 8
             row = row + 1
         except:
-            fail.append(col_list[row],'录入失败！')
+            fail.append(col_list[row],'录入失败!')
             print(fail)
+    
     #driver.find_element(By.XPATH, '//button[@id="Save_Btn"]).click()
-
+    time.sleep(1)
+    messagebox.showinfo(title='成功', message='录入完成，请确认后保存!')
+    
 else:
-    print('请选择csv文件！')
-    driver.quit()
+    messagebox.showinfo(title='错误', message='请选择csv文件!')

@@ -104,6 +104,7 @@ if not csvfile == '':
     driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
     driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
     driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
+    time.sleep(1)
     driver.find_element(By.XPATH, '//input[@name="ck"]').click()
     driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
     time.sleep(2)

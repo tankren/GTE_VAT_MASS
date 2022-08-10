@@ -122,7 +122,9 @@ class Worker(QThread):
                 message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
                 self.sinOut.emit(message)
         time.sleep(1)
-        message = f'{datetime.now()} - 录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '
+        message = f'{datetime.now()} - 录入完成, 共{df.shape[0]}条, 成功{row}条. '
+        self.sinOut.emit(message)
+        message = 'DONE'
         self.sinOut.emit(message)
 
     except Exception:
@@ -131,12 +133,12 @@ class Worker(QThread):
         self.sinOut.emit(message)
         #driver.quit()
 
-
 class MyWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.thread = Worker()
-        self.setWindowTitle('GTE发票批量录入工具 v0.3   - Made by REC3WX')
+        title = 'GTE发票批量录入工具 v0.3   - Made by REC3WX'
+        self.setWindowTitle(title)
         pixmapi = QStyle.SP_FileDialogDetailedView
         icon = self.style().standardIcon(pixmapi)
         self.setWindowIcon(icon)
@@ -161,12 +163,12 @@ class MyWidget(QWidget):
         self.cb_year= QComboBox()
         year = datetime.today().year
         self.cb_year.addItems(['', str(year-1), str(year), str(year+1)])
-        self.cb_year.currentTextChanged[str].connect(self.get_year)
+        self.cb_year.currentTextChanged[str].connect(self.get_year_month)
 
         self.fld_month= QLabel('发票月份:')
         self.cb_month = QComboBox()
         self.cb_month.addItems(['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'])
-        self.cb_month.currentTextChanged[str].connect(self.get_month)
+        self.cb_month.currentTextChanged[str].connect(self.get_year_month)
 
         self.btn_start = QPushButton('开始')
         self.btn_start.setEnabled(False)
@@ -205,14 +207,16 @@ class MyWidget(QWidget):
     @Slot()
     def Addmsg(self, message):
         self.text_result.appendPlainText(message)
+        if message ==- 'DONE':
+                self.msgbox('DONE', '请确认后保存!! ')
 
-    def get_year(self):
+    def get_year_month(self):
         year = str(self.cb_year.currentText())
-        self.text_result.appendPlainText(r"当前选择的发票年份为: {}年".format(year))
-
-    def get_month(self):
         month = str(self.cb_month.currentText())
-        self.text_result.appendPlainText(r"当前选择的发票月份为: {}月".format(month))
+        title = 'GTE发票批量录入工具 v0.3   - Made by REC3WX'
+        if not year == '' and not month == '':
+            #self.text_result.appendPlainText(f'当前选择的发票年月为: {year}年{month}月')
+            self.setWindowTitle(f'{title} - 发票年月: {year}年{month}月')
 
     def reset(self):
         self.line_csv.setText('')
@@ -235,7 +239,7 @@ class MyWidget(QWidget):
         tip = QMessageBox(self)
         if title == 'error':
             tip.setIcon(QMessageBox.Critical)
-        elif title == 'done' :
+        elif title == 'DONE' :
             tip.setIcon(QMessageBox.Warning)
         tip.setWindowFlag(Qt.FramelessWindowHint)
         font = QFont()

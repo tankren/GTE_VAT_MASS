@@ -29,12 +29,18 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QFileDialog, QApplication, 
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Slot, Qt, QThread, Signal
 import qdarktheme
+import socket
 
 opt = Options()
-#opt.add_experimental_option("debuggerAddress", "localhost:9222")
-opt.add_argument("--remote-debugging-port=9222")
-opt.add_argument("--start-maximized")
-opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+port = ("localhost", 9222)
+open = sock.connect_ex(port)
+if open == 0:
+    opt.add_experimental_option("debuggerAddress", "localhost:9222")
+else:
+    opt.add_argument("--remote-debugging-port=9222")
+    opt.add_argument("--start-maximized")
+    opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
 ##driver_path = ChromeService(r'./chromedriver.exe')
 ##driver = webdriver.Chrome(service=driver_path, options=opt)
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)

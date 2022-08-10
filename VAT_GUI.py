@@ -114,12 +114,12 @@ class Worker(QThread):
             try: 
                 driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
                 autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
-                message = f'{datetime.now()} - 发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入成功!'
+                message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入成功!'
                 self.sinOut.emit(message)
                 num1 = num1 + 8
                 row = row + 1
             except:
-                message = f'{datetime.now()} - 发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
+                message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
                 self.sinOut.emit(message)
         time.sleep(1)
         message = f'{datetime.now()} - 录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '

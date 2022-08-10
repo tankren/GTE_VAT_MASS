@@ -224,7 +224,7 @@ def main():
     app.setFont(font)
     widget = MyWidget()
     widget.show()
-    app.exec()
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

@@ -26,18 +26,11 @@ import pandas as pd
 import sys
 import time
 from tkinter import simpledialog, messagebox
-from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox, QThread
+from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox
 from PySide6.QtGui import QFont
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Slot, Qt, QThread, QObject, Signal
 import qdarktheme
 import threading
-
-class MainBackgroundThread(QThread):
-    def __init__(self, year, month):
-        QThread.__init__(self)
-        self.keyword, self.sector = keyword, sector
-    def run(self):
-        main(self.keyword, self.sector)
 
 class MyWidget(QWidget):
     def __init__(self, parent=None):
@@ -66,7 +59,9 @@ class MyWidget(QWidget):
         self.cb_month.currentTextChanged[str].connect(self.get_month)
 
         self.btn_start = QPushButton('开始')
-        self.btn_start.clicked.connect(self.start)
+        self.btn_start.setEnabled(False)
+        self.btn_start.clicked.connect(self.execute)
+
 
         self.fld_result = QLabel('运行日志:')
         self.text_result = QPlainTextEdit()
@@ -110,6 +105,7 @@ class MyWidget(QWidget):
         self.cb_year.setCurrentText('')
         self.cb_month.setCurrentText('')
         self.text_result.clear()
+        self.btn_start.setEnabled(False)
 
     def opencsvDialog(self):
         dialog = QFileDialog()
@@ -119,6 +115,7 @@ class MyWidget(QWidget):
         if dialog.exec():
             fileNames = dialog.selectedFiles()
             self.line_csv.setText(fileNames[0])
+            self.btn_start.setEnabled(True)
 
     def msgbox(self, title, text):
         tip = QMessageBox(self)
@@ -133,8 +130,8 @@ class MyWidget(QWidget):
         tip.setFont(font)
         tip.setText(text)
         tip.exec()
-    
-    def start(self):
+
+    def execute(self):
         def autofill(num1, fphm, net, vat):
             num2 = num1 + 6
             num3 = num1 + 7
@@ -151,85 +148,72 @@ class MyWidget(QWidget):
         year = str(self.cb_year.currentText())
         month = str(self.cb_month.currentText())
 
-        if self.line_csv.text() == '':
-            self.msgbox('error', 'CSV文件选择有误, 请重新选择! ')
-        else:
-            
-                            
-            #year = input("请输入发票年份(YYYY):")
-            #month = input("请输入发票月份(M):")
-            #year = ('2022')
-            #month = ('7')
-
-            if year == '' or month == '':
+        if year == '' or month == '':
                 self.msgbox('error', '请选择并确认发票年月!! ')
-            else:
-                df = pd.read_csv(self.line_csv.text(), dtype=str, header=0)
-                
-                col_list = df.values.tolist()
-                row = 0
-                num1 = 1
-                opt = Options()
-                #opt.add_experimental_option("debuggerAddress", "localhost:9222")
+        else:
+            df = pd.read_csv(self.line_csv.text(), dtype=str, header=0)
+            
+            col_list = df.values.tolist()
+            row = 0
+            num1 = 1
+            opt = Options()
+            #opt.add_experimental_option("debuggerAddress", "localhost:9222")
 
-                opt.add_argument("--remote-debugging-port=9222")
-                opt.add_argument("--start-maximized")
-                opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
-                """
-                driver_path = ChromeService(r'./chromedriver.exe')
-                driver = webdriver.Chrome(service=driver_path, options=opt)
-                """
-                self.text_result.appendPlainText('打开Chrome并自动登录...')
-                driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
-                driver.set_page_load_timeout(3)
-                try:
-                    driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
-                    time.sleep(2)
-                    driver.find_element(By.NAME, "x").click()
-                    driver.find_element(By.NAME, "x").clear()
-                    driver.find_element(By.NAME, "x").send_keys('3334')
-                    driver.find_element(By.NAME, "y1").click()
-                    driver.find_element(By.NAME, "y1").clear()
-                    driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
-                    driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
-                    self.text_result.appendPlainText('打开发票录入单窗口...')
-                    time.sleep(2)
-                    driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
-                    ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/a').click()
+            opt.add_argument("--remote-debugging-port=9222")
+            opt.add_argument("--start-maximized")
+            opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+            ##driver_path = ChromeService(r'./chromedriver.exe')
+            ##driver = webdriver.Chrome(service=driver_path, options=opt)
+            self.text_result.appendPlainText('打开Chrome并自动登录...')
+            driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
+            driver.set_page_load_timeout(3)
+            try:
+                driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
+                time.sleep(2)
+                driver.find_element(By.NAME, "x").click()
+                driver.find_element(By.NAME, "x").clear()
+                driver.find_element(By.NAME, "x").send_keys('3334')
+                driver.find_element(By.NAME, "y1").click()
+                driver.find_element(By.NAME, "y1").clear()
+                driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
+                driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
+                self.text_result.appendPlainText('打开发票录入单窗口...')
+                time.sleep(2)
+                driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
+                ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/a').click()
 
-                    ##driver.implicitly_wait(1)
-                    ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/ul/li[1]/a').click()
-                    self.text_result.appendPlainText('筛选发票年月...')
-                    driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
-                    driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
-                    driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-                    driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
-                    driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
-                    driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-                    driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
-                    time.sleep(1)
-                    driver.find_element(By.XPATH, '//input[@name="ck"]').click()
-                    driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
-                    time.sleep(2)
-                    iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
-                    driver.switch_to.frame("layui-layer-iframe1")
-                    self.text_result.appendPlainText('开始录入发票...')
-                    for item in col_list:
-                        try: 
-                            driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
-                            autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
-                            num1 = num1 + 8
-                            row = row + 1
-                        except:
-                            self.text_result.appendPlainText(col_list[row],'录入失败!')
-                    time.sleep(1)
-                    self.msgbox('done', '录入完成，请确认后保存!! ')
+                ##driver.implicitly_wait(1)
+                ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/ul/li[1]/a').click()
+                self.text_result.appendPlainText('筛选发票年月...')
+                driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
+                driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
+                driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+                driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
+                driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
+                driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+                driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
+                time.sleep(1)
+                driver.find_element(By.XPATH, '//input[@name="ck"]').click()
+                driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
+                time.sleep(2)
+                iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
+                driver.switch_to.frame("layui-layer-iframe1")
+                self.text_result.appendPlainText('开始录入发票...')
+                for item in col_list:
+                    try: 
+                        driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
+                        autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
+                        num1 = num1 + 8
+                        row = row + 1
+                    except:
+                        self.text_result.appendPlainText(col_list[row],'录入失败!')
+                time.sleep(1)
+                self.msgbox('done', '录入完成，请确认后保存!! ')
 
-                except Exception:
-                    driver.execute_script('window.stop()')
-                    self.text_result.appendPlainText('网页无法加载, 请确认VPN连接是否正常! ')
-                    driver.quit()
-
+            except Exception:
+                driver.execute_script('window.stop()')
+                self.text_result.appendPlainText('网页无法加载, 请确认VPN连接是否正常! ')
+                driver.quit()
 
 def main():
     if not QApplication.instance():
@@ -246,4 +230,4 @@ def main():
     sys.exit(app.exec())  
 
 if __name__ == '__main__':
-main()
+    main()

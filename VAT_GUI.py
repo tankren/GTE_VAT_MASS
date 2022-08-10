@@ -41,7 +41,6 @@ driver.set_page_load_timeout(5)
 
 class Worker(QThread):
   sinOut = Signal(str)
-  finish = Signal(str)
 
   def __init__(self, parent=None):
     super(Worker, self).__init__(parent)
@@ -127,15 +126,11 @@ class Worker(QThread):
         time.sleep(1)
         message = f'录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '
         self.sinOut.emit(message)
-        finish = 'OK'
-        self.finish.emit(finish)
 
     except Exception:
         driver.execute_script('window.stop()')
         message = '网页无法加载, 请确认VPN连接是否正常! '
         self.sinOut.emit(message)
-        finish = 'error'
-        self.finish.emit(finish)
         #driver.quit()
 
 
@@ -199,8 +194,7 @@ class MyWidget(QWidget):
 
         self.setLayout(self.layout)
         
-        self.thread.sinOut.connect(self.Addmsg)
-        self.thread.finish.connect(self.stopthread)
+        self.thread.sinOut.connect(self.Addmsg)  #解决重复emit
 
     @Slot()
     def Addmsg(self, message):
@@ -243,11 +237,7 @@ class MyWidget(QWidget):
         font.setPointSize(9)
         tip.setFont(font)
         tip.setText(text)
-        tip.exec()
-    
-    def stopthread(self, finish):
-        if finish == 'ok' or 'error':
-            print(finish)       
+        tip.exec()  
 
     def execute(self):
         self.move(1100, 600)

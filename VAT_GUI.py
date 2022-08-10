@@ -24,7 +24,7 @@ from webdriver_manager.chrome  import ChromeDriverManager
 import pandas as pd
 import sys
 import time
-from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox
+from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox 
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Slot, Qt, QThread, Signal
 import qdarktheme
@@ -64,9 +64,12 @@ class Worker(QThread):
         def autofill(num1, fphm, net, vat):
             num2 = num1 + 6
             num3 = num1 + 7
-            path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
-            path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
-            path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
+            #path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
+            #path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
+            #path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
+            path1 = f'//input[@id="_easyui_textbox_input{num1}"]'
+            path2 = f'//input[@id="_easyui_textbox_input{num2}"]'
+            path3 = f'//input[@id="_easyui_textbox_input{num3}"]'
             driver.find_element(By.XPATH, path1).click()
             driver.find_element(By.XPATH, path1).send_keys(fphm)
             driver.find_element(By.XPATH, path2).click()
@@ -75,7 +78,7 @@ class Worker(QThread):
             driver.find_element(By.XPATH, path3).send_keys(vat)
         
         try:
-            message = '打开Chrome并自动登录...'
+            message = '开始自动登录...'
             self.sinOut.emit(message)
             driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
             time.sleep(2)
@@ -86,12 +89,14 @@ class Worker(QThread):
             driver.find_element(By.NAME, "y1").clear()
             driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
             driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
+            message = '自动登录成功!'
+            self.sinOut.emit(message)            
             message = '打开发票录入单窗口...'
             self.sinOut.emit(message)
             time.sleep(2)
             driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
             time.sleep(2)
-            message = '筛选发票年月...'
+            message = f'筛选发票年月: {year} 年 {month} 月'
             self.sinOut.emit(message)
             driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
             driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
@@ -104,27 +109,32 @@ class Worker(QThread):
             driver.find_element(By.XPATH, '//input[@name="ck"]').click()
             driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
             time.sleep(2)
-            iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
-            driver.switch_to.frame("layui-layer-iframe1")
+
             message = '开始录入发票...'
             self.sinOut.emit(message)
+            iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
+            driver.switch_to.frame("layui-layer-iframe1")
+
             for item in col_list:
                 try: 
                     driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
                     autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
+                    message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入成功!'
+                    self.sinOut.emit(message)
                     num1 = num1 + 8
                     row = row + 1
                 except:
-                    message = (r'{}录入失败!.format(col_list[row])')
+                    message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
+                    self.sinOut.emit(message)
             time.sleep(1)
-            message = '录入完成，请确认后保存!! '
+            message = f'录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '
             self.sinOut.emit(message)
 
         except Exception:
             driver.execute_script('window.stop()')
             message = '网页无法加载, 请确认VPN连接是否正常! '
             self.sinOut.emit(message)
-            driver.quit()
+            #driver.quit()
 
 
 class MyWidget(QWidget):
@@ -231,6 +241,7 @@ class MyWidget(QWidget):
         tip.exec()
 
     def execute(self):
+        self.move(1100, 600)
         year = str(self.cb_year.currentText())
         month = str(self.cb_month.currentText())
         if year == '' or month == '':

@@ -141,6 +141,13 @@ class MyWidget(QWidget):
         icon = self.style().standardIcon(pixmapi)
         self.setWindowIcon(icon)
         self.setFixedSize(700, 300)
+        self.setWindowFlags(
+            Qt.Window |
+            Qt.CustomizeWindowHint |
+            Qt.WindowTitleHint |
+            Qt.WindowCloseButtonHint |
+            Qt.WindowStaysOnTopHint
+            )
 
         self.fld_csv= QLabel('发票CSV文件:')
         self.btn_csv= QPushButton('打开')
@@ -238,7 +245,6 @@ class MyWidget(QWidget):
         tip.exec()  
 
     def execute(self):
-        self.move(1100, 600)
         year = str(self.cb_year.currentText())
         month = str(self.cb_month.currentText())
         if year == '' or month == '':

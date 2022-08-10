@@ -41,100 +41,102 @@ driver.set_page_load_timeout(5)
 
 class Worker(QThread):
   sinOut = Signal(str)
+  finish = Signal(str)
 
   def __init__(self, parent=None):
     super(Worker, self).__init__(parent)
-    #设置工作状态
-    self.working = True
 
   def getdata(self, path, year, month):
     self.filepath = path
     self.year = year
     self.month = month
-
+  
   def run(self):
-    #while self.working == True:
-        #主逻辑
-        year = self.year
-        month = self.month
-        df = pd.read_csv(self.filepath, dtype=str, header=0)
-        col_list = df.values.tolist()
-        row = 0
-        num1 = 1
-        def autofill(num1, fphm, net, vat):
-            num2 = num1 + 6
-            num3 = num1 + 7
-            #path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
-            #path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
-            #path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
-            path1 = f'//input[@id="_easyui_textbox_input{num1}"]'
-            path2 = f'//input[@id="_easyui_textbox_input{num2}"]'
-            path3 = f'//input[@id="_easyui_textbox_input{num3}"]'
-            driver.find_element(By.XPATH, path1).click()
-            driver.find_element(By.XPATH, path1).send_keys(fphm)
-            driver.find_element(By.XPATH, path2).click()
-            driver.find_element(By.XPATH, path2).send_keys(net)
-            driver.find_element(By.XPATH, path3).click()
-            driver.find_element(By.XPATH, path3).send_keys(vat)
-        
-        try:
-            message = '开始自动登录...'
-            self.sinOut.emit(message)
-            driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
-            time.sleep(2)
-            driver.find_element(By.NAME, "x").click()
-            driver.find_element(By.NAME, "x").clear()
-            driver.find_element(By.NAME, "x").send_keys('3334')
-            driver.find_element(By.NAME, "y1").click()
-            driver.find_element(By.NAME, "y1").clear()
-            driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
-            driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
-            message = '自动登录成功!'
-            self.sinOut.emit(message)            
-            message = '打开发票录入单窗口...'
-            self.sinOut.emit(message)
-            time.sleep(2)
-            driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
-            time.sleep(2)
-            message = f'筛选发票年月: {year} 年 {month} 月'
-            self.sinOut.emit(message)
-            driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
-            driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
-            driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-            driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
-            driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
-            driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-            driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
-            time.sleep(1)
-            driver.find_element(By.XPATH, '//input[@name="ck"]').click()
-            driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
-            time.sleep(2)
+    #主逻辑
+    year = self.year
+    month = self.month
+    df = pd.read_csv(self.filepath, dtype=str, header=0)
+    col_list = df.values.tolist()
+    row = 0
+    num1 = 1
+    def autofill(num1, fphm, net, vat):
+        num2 = num1 + 6
+        num3 = num1 + 7
+        #path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
+        #path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
+        #path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
+        path1 = f'//input[@id="_easyui_textbox_input{num1}"]'
+        path2 = f'//input[@id="_easyui_textbox_input{num2}"]'
+        path3 = f'//input[@id="_easyui_textbox_input{num3}"]'
+        driver.find_element(By.XPATH, path1).click()
+        driver.find_element(By.XPATH, path1).send_keys(fphm)
+        driver.find_element(By.XPATH, path2).click()
+        driver.find_element(By.XPATH, path2).send_keys(net)
+        driver.find_element(By.XPATH, path3).click()
+        driver.find_element(By.XPATH, path3).send_keys(vat)
+    
+    try:
+        message = '开始自动登录...'
+        self.sinOut.emit(message)
+        driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
+        time.sleep(2)
+        driver.find_element(By.NAME, "x").click()
+        driver.find_element(By.NAME, "x").clear()
+        driver.find_element(By.NAME, "x").send_keys('3334')
+        driver.find_element(By.NAME, "y1").click()
+        driver.find_element(By.NAME, "y1").clear()
+        driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
+        driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
+        message = '自动登录成功!'
+        self.sinOut.emit(message)            
+        message = '打开发票录入单窗口...'
+        self.sinOut.emit(message)
+        time.sleep(2)
+        driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
+        time.sleep(2)
+        message = f'筛选发票年月: {year} 年 {month} 月'
+        self.sinOut.emit(message)
+        driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
+        driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
+        driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+        driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
+        driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
+        driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+        driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
+        time.sleep(1)
+        driver.find_element(By.XPATH, '//input[@name="ck"]').click()
+        driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
+        time.sleep(2)
 
-            message = '开始录入发票...'
-            self.sinOut.emit(message)
-            iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
-            driver.switch_to.frame("layui-layer-iframe1")
+        message = '开始录入发票...'
+        self.sinOut.emit(message)
+        iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
+        driver.switch_to.frame("layui-layer-iframe1")
 
-            for item in col_list:
-                try: 
-                    driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
-                    autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
-                    message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入成功!'
-                    self.sinOut.emit(message)
-                    num1 = num1 + 8
-                    row = row + 1
-                except:
-                    message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
-                    self.sinOut.emit(message)
-            time.sleep(1)
-            message = f'录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '
-            self.sinOut.emit(message)
+        for item in col_list:
+            try: 
+                driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
+                autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
+                message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入成功!'
+                self.sinOut.emit(message)
+                num1 = num1 + 8
+                row = row + 1
+            except:
+                message = f'发票号{col_list[row][0]} 不含税金额{col_list[row][1]} 税额{col_list[row][2]} 录入失败!'
+                self.sinOut.emit(message)
+        time.sleep(1)
+        message = f'录入完成, 共{df.shape[0]}条, 成功{row}条, 请确认后保存!! '
+        self.sinOut.emit(message)
+        finish = 'OK'
+        self.finish.emit(finish)
 
-        except Exception:
-            driver.execute_script('window.stop()')
-            message = '网页无法加载, 请确认VPN连接是否正常! '
-            self.sinOut.emit(message)
-            #driver.quit()
+    except Exception:
+        driver.execute_script('window.stop()')
+        message = '网页无法加载, 请确认VPN连接是否正常! '
+        self.sinOut.emit(message)
+        finish = 'error'
+        self.finish.emit(finish)
+        #driver.quit()
 
 
 class MyWidget(QWidget):
@@ -196,6 +198,9 @@ class MyWidget(QWidget):
         self.layout.addWidget((self.btn_reset), 6, 7, 1, 1)
 
         self.setLayout(self.layout)
+        
+        self.thread.sinOut.connect(self.Addmsg)
+        self.thread.finish.connect(self.stopthread)
 
     @Slot()
     def Addmsg(self, message):
@@ -239,6 +244,10 @@ class MyWidget(QWidget):
         tip.setFont(font)
         tip.setText(text)
         tip.exec()
+    
+    def stopthread(self, finish):
+        if finish == 'ok' or 'error':
+            print(finish)       
 
     def execute(self):
         self.move(1100, 600)
@@ -248,9 +257,8 @@ class MyWidget(QWidget):
             self.msgbox('error', '请选择并确认发票年月!! ')
         else:
             self.thread.getdata(self.line_csv.text(), year, month)
-            self.thread.sinOut.connect(self.Addmsg)
             self.thread.start()
-            
+
 def main():
     if not QApplication.instance():
         app = QApplication(sys.argv)

@@ -55,7 +55,7 @@ class MyWidget(QWidget):
 
         self.fld_month= QLabel('发票月份:')
         self.cb_month = QComboBox()
-        self.cb_month.addItems(['', ' 1', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', '11', '12'])
+        self.cb_month.addItems(['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'])
         self.cb_month.currentTextChanged[str].connect(self.get_month)
 
         self.btn_start = QPushButton('开始')
@@ -94,11 +94,11 @@ class MyWidget(QWidget):
     @Slot()
     def get_year(self):
         year = str(self.cb_year.currentText())
-        self.text_result.appendPlainText(r"当前选择的发票年份为{}".format(year))
+        self.text_result.appendPlainText(r"当前选择的发票年份为: {}年".format(year))
 
     def get_month(self):
         month = str(self.cb_month.currentText())
-        self.text_result.appendPlainText(r"当前选择的发票月份为{}".format(month))
+        self.text_result.appendPlainText(r"当前选择的发票月份为: {}月".format(month))
 
     def reset(self):
         self.line_csv.setText('')
@@ -166,7 +166,7 @@ class MyWidget(QWidget):
             ##driver = webdriver.Chrome(service=driver_path, options=opt)
             self.text_result.appendPlainText('打开Chrome并自动登录...')
             driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
-            driver.set_page_load_timeout(3)
+            driver.set_page_load_timeout(25)
             try:
                 driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
                 time.sleep(2)
@@ -180,10 +180,7 @@ class MyWidget(QWidget):
                 self.text_result.appendPlainText('打开发票录入单窗口...')
                 time.sleep(2)
                 driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
-                ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/a').click()
-
-                ##driver.implicitly_wait(1)
-                ##driver.find_element(By.XPATH, '/html/body/aside/nav/ul/li[4]/ul/li[1]/a').click()
+                time.sleep(2)
                 self.text_result.appendPlainText('筛选发票年月...')
                 driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
                 driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
@@ -208,7 +205,7 @@ class MyWidget(QWidget):
                     except:
                         self.text_result.appendPlainText(col_list[row],'录入失败!')
                 time.sleep(1)
-                self.msgbox('done', '录入完成，请确认后保存!! ')
+                self.text_result.appendPlainText('录入完成，请确认后保存!! ')
 
             except Exception:
                 driver.execute_script('window.stop()')
@@ -227,7 +224,7 @@ def main():
     app.setFont(font)
     widget = MyWidget()
     widget.show()
-    sys.exit(app.exec())  
+    app.exec()
 
 if __name__ == '__main__':
     main()

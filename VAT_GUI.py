@@ -37,7 +37,7 @@ opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
 ##driver_path = ChromeService(r'./chromedriver.exe')
 ##driver = webdriver.Chrome(service=driver_path, options=opt)
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
-driver.set_page_load_timeout(15)
+driver.set_page_load_timeout(5)
 
 class Worker(QThread):
   sinOut = Signal(str)

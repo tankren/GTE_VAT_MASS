@@ -16,7 +16,6 @@ ChromeDriverManager-chrome.py
 """
 
 
-from argparse import FileType
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -25,18 +24,114 @@ from webdriver_manager.chrome  import ChromeDriverManager
 import pandas as pd
 import sys
 import time
-from tkinter import simpledialog, messagebox
 from PySide6.QtWidgets import QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox
 from PySide6.QtGui import QFont
-from PySide6.QtCore import Slot, Qt, QThread, QObject, Signal
+from PySide6.QtCore import Slot, Qt, QThread, Signal
 import qdarktheme
-import threading
+
+opt = Options()
+#opt.add_experimental_option("debuggerAddress", "localhost:9222")
+opt.add_argument("--remote-debugging-port=9222")
+opt.add_argument("--start-maximized")
+opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+##driver_path = ChromeService(r'./chromedriver.exe')
+##driver = webdriver.Chrome(service=driver_path, options=opt)
+driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
+driver.set_page_load_timeout(15)
+
+class Worker(QThread):
+  sinOut = Signal(str)
+
+  def __init__(self, parent=None):
+    super(Worker, self).__init__(parent)
+    #设置工作状态
+    self.working = True
+
+  def getdata(self, path, year, month):
+    self.filepath = path
+    self.year = year
+    self.month = month
+
+  def run(self):
+    #while self.working == True:
+        #主逻辑
+        year = self.year
+        month = self.month
+        df = pd.read_csv(self.filepath, dtype=str, header=0)
+        col_list = df.values.tolist()
+        row = 0
+        num1 = 1
+        def autofill(num1, fphm, net, vat):
+            num2 = num1 + 6
+            num3 = num1 + 7
+            path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
+            path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
+            path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
+            driver.find_element(By.XPATH, path1).click()
+            driver.find_element(By.XPATH, path1).send_keys(fphm)
+            driver.find_element(By.XPATH, path2).click()
+            driver.find_element(By.XPATH, path2).send_keys(net)
+            driver.find_element(By.XPATH, path3).click()
+            driver.find_element(By.XPATH, path3).send_keys(vat)
+        
+        try:
+            message = '打开Chrome并自动登录...'
+            self.sinOut.emit(message)
+            driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
+            time.sleep(2)
+            driver.find_element(By.NAME, "x").click()
+            driver.find_element(By.NAME, "x").clear()
+            driver.find_element(By.NAME, "x").send_keys('3334')
+            driver.find_element(By.NAME, "y1").click()
+            driver.find_element(By.NAME, "y1").clear()
+            driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
+            driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
+            message = '打开发票录入单窗口...'
+            self.sinOut.emit(message)
+            time.sleep(2)
+            driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
+            time.sleep(2)
+            message = '筛选发票年月...'
+            self.sinOut.emit(message)
+            driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
+            driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
+            driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+            driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
+            driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
+            driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
+            driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
+            time.sleep(1)
+            driver.find_element(By.XPATH, '//input[@name="ck"]').click()
+            driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
+            time.sleep(2)
+            iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
+            driver.switch_to.frame("layui-layer-iframe1")
+            message = '开始录入发票...'
+            self.sinOut.emit(message)
+            for item in col_list:
+                try: 
+                    driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
+                    autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
+                    num1 = num1 + 8
+                    row = row + 1
+                except:
+                    message = (r'{}录入失败!.format(col_list[row])')
+            time.sleep(1)
+            message = '录入完成，请确认后保存!! '
+            self.sinOut.emit(message)
+
+        except Exception:
+            driver.execute_script('window.stop()')
+            message = '网页无法加载, 请确认VPN连接是否正常! '
+            self.sinOut.emit(message)
+            driver.quit()
+
 
 class MyWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.setWindowTitle('GTE发票批量录入工具 v0.1   - Made by REC3WX')
+        self.thread = Worker()
+        self.setWindowTitle('GTE发票批量录入工具 v0.2   - Made by REC3WX')
         pixmapi = QStyle.SP_FileDialogDetailedView
         icon = self.style().standardIcon(pixmapi)
         self.setWindowIcon(icon)
@@ -46,7 +141,9 @@ class MyWidget(QWidget):
         self.btn_csv= QPushButton('打开')
         self.btn_csv.clicked.connect(self.opencsvDialog)
         self.line_csv = QLineEdit()
-        self.line_csv.setClearButtonEnabled(True) #清空按钮
+        #self.line_csv.setClearButtonEnabled(True) #清空按钮
+
+        self.line_csv.setAcceptDrops(True)
         
         self.fld_year= QLabel('发票年份:')
         self.cb_year= QComboBox()
@@ -61,8 +158,7 @@ class MyWidget(QWidget):
         self.btn_start = QPushButton('开始')
         self.btn_start.setEnabled(False)
         self.btn_start.clicked.connect(self.execute)
-
-
+        
         self.fld_result = QLabel('运行日志:')
         self.text_result = QPlainTextEdit()
         self.text_result.setReadOnly(True)
@@ -92,6 +188,9 @@ class MyWidget(QWidget):
         self.setLayout(self.layout)
 
     @Slot()
+    def Addmsg(self, message):
+        self.text_result.appendPlainText(message)
+
     def get_year(self):
         year = str(self.cb_year.currentText())
         self.text_result.appendPlainText(r"当前选择的发票年份为: {}年".format(year))
@@ -132,86 +231,15 @@ class MyWidget(QWidget):
         tip.exec()
 
     def execute(self):
-        def autofill(num1, fphm, net, vat):
-            num2 = num1 + 6
-            num3 = num1 + 7
-            path1 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num1))
-            path2 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num2))
-            path3 = (r'//input[@id="_easyui_textbox_input{}"]'.format(num3)) 
-            driver.find_element(By.XPATH, path1).click()
-            driver.find_element(By.XPATH, path1).send_keys(fphm)
-            driver.find_element(By.XPATH, path2).click()
-            driver.find_element(By.XPATH, path2).send_keys(net)
-            driver.find_element(By.XPATH, path3).click()
-            driver.find_element(By.XPATH, path3).send_keys(vat)
-
         year = str(self.cb_year.currentText())
         month = str(self.cb_month.currentText())
-
         if year == '' or month == '':
-                self.msgbox('error', '请选择并确认发票年月!! ')
+            self.msgbox('error', '请选择并确认发票年月!! ')
         else:
-            df = pd.read_csv(self.line_csv.text(), dtype=str, header=0)
+            self.thread.getdata(self.line_csv.text(), year, month)
+            self.thread.sinOut.connect(self.Addmsg)
+            self.thread.start()
             
-            col_list = df.values.tolist()
-            row = 0
-            num1 = 1
-            opt = Options()
-            #opt.add_experimental_option("debuggerAddress", "localhost:9222")
-
-            opt.add_argument("--remote-debugging-port=9222")
-            opt.add_argument("--start-maximized")
-            opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
-            ##driver_path = ChromeService(r'./chromedriver.exe')
-            ##driver = webdriver.Chrome(service=driver_path, options=opt)
-            self.text_result.appendPlainText('打开Chrome并自动登录...')
-            driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
-            driver.set_page_load_timeout(25)
-            try:
-                driver.get(url='http://192.168.10.47:8080/glaf/loginApp.do')
-                time.sleep(2)
-                driver.find_element(By.NAME, "x").click()
-                driver.find_element(By.NAME, "x").clear()
-                driver.find_element(By.NAME, "x").send_keys('3334')
-                driver.find_element(By.NAME, "y1").click()
-                driver.find_element(By.NAME, "y1").clear()
-                driver.find_element(By.NAME, "y1").send_keys('KLnA67LW')
-                driver.find_element(By.XPATH, '//button[@onclick="doLogin()"]').click()
-                self.text_result.appendPlainText('打开发票录入单窗口...')
-                time.sleep(2)
-                driver.get(url='http://192.168.10.47:8080/glaf/apps/bill.do?flag=billConfirm')
-                time.sleep(2)
-                self.text_result.appendPlainText('筛选发票年月...')
-                driver.find_element(By.XPATH, '//span[@id="select2-iyear-container"]').click()
-                driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(year)
-                driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-                driver.find_element(By.XPATH, '//span[@id="select2-imonth-container"]').click()
-                driver.find_element(By.XPATH, '//input[@class="select2-search__field"]').send_keys(month)
-                driver.find_element(By.XPATH, '//li[@class="select2-results__option select2-results__option--highlighted"]').click()
-                driver.find_element(By.XPATH, '//button[@id="Search_Btn"]').click()
-                time.sleep(1)
-                driver.find_element(By.XPATH, '//input[@name="ck"]').click()
-                driver.find_element(By.XPATH, '//button[@onclick="javascript:invoice();"]').click()
-                time.sleep(2)
-                iframe = driver.find_element(By.XPATH, '//iframe[@id="layui-layer-iframe1"]')
-                driver.switch_to.frame("layui-layer-iframe1")
-                self.text_result.appendPlainText('开始录入发票...')
-                for item in col_list:
-                    try: 
-                        driver.find_element(By.XPATH, '//button[@id="Add_Btn"]').click()
-                        autofill(num1, col_list[row][0], col_list[row][1],col_list[row][2])
-                        num1 = num1 + 8
-                        row = row + 1
-                    except:
-                        self.text_result.appendPlainText(col_list[row],'录入失败!')
-                time.sleep(1)
-                self.text_result.appendPlainText('录入完成，请确认后保存!! ')
-
-            except Exception:
-                driver.execute_script('window.stop()')
-                self.text_result.appendPlainText('网页无法加载, 请确认VPN连接是否正常! ')
-                driver.quit()
-
 def main():
     if not QApplication.instance():
         app = QApplication(sys.argv)

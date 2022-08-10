@@ -159,7 +159,8 @@ class MyWidget(QWidget):
         
         self.fld_year= QLabel('发票年份:')
         self.cb_year= QComboBox()
-        self.cb_year.addItems(['', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'])
+        year = datetime.today().year
+        self.cb_year.addItems(['', str(year-1), str(year), str(year+1)])
         self.cb_year.currentTextChanged[str].connect(self.get_year)
 
         self.fld_month= QLabel('发票月份:')

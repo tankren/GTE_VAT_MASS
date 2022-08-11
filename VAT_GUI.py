@@ -212,9 +212,10 @@ class MyWidget(QWidget):
 
     @Slot()
     def Addmsg(self, message):
-        self.text_result.appendPlainText(message)
-        if message ==- 'DONE':
-                self.msgbox('DONE', '请确认后保存!! ')
+        if not message == 'DONE':
+            self.text_result.appendPlainText(message)
+        else:
+            self.msgbox('DONE', '录入完成, 请确认后保存!! ')
 
     def get_year_month(self):
         year = str(self.cb_year.currentText())

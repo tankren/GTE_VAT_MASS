@@ -28,7 +28,6 @@ from datetime import datetime
 from PySide6.QtWidgets import (QWidget, QPushButton, QFileDialog, QApplication, QLineEdit, QGridLayout, QLabel, QMessageBox, QPlainTextEdit, QFrame, QStyle, QComboBox)
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Slot, Qt, QThread, Signal
-import qdarktheme
 import socket
 
 opt = Options()
@@ -270,7 +269,7 @@ def main():
         app = QApplication(sys.argv)
     else:
         app = QApplication.instance()
-    app.setStyleSheet(qdarktheme.load_stylesheet())
+    app.setStyleSheet('fusion')
     font = QFont()
     font.setFamily("Microsoft YaHei")
     font.setPointSize(10)

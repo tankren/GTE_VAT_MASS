@@ -29,17 +29,20 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QFileDialog, QApplication, 
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Slot, Qt, QThread, Signal
 import socket
+import tempfile
 
 opt = Options()
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 port = ("localhost", 9222)
 open = sock.connect_ex(port)
+temp = tempfile.gettempdir()
 if open == 0:
     opt.add_experimental_option("debuggerAddress", "localhost:9222")
 else:
     opt.add_argument("--remote-debugging-port=9222")
     opt.add_argument("--start-maximized")
-    opt.add_argument('user-data-dir=C:\\selenium\\ChromeProfile')
+    opt.add_argument(f'user-data-dir={temp}//ChromeProfile')  
+
 ##driver_path = ChromeService(r'./chromedriver.exe')
 ##driver = webdriver.Chrome(service=driver_path, options=opt)
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opt)
@@ -269,7 +272,7 @@ def main():
         app = QApplication(sys.argv)
     else:
         app = QApplication.instance()
-    app.setStyleSheet('fusion')
+    app.setStyle('fusion')
     font = QFont()
     font.setFamily("Microsoft YaHei")
     font.setPointSize(10)
